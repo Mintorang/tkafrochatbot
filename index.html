@@ -1,1 +1,1059 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TKAfro Kitchen Support</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
 
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f5f5f5;
+        }
+
+        .chat-widget {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 9999;
+        }
+
+        .chat-button {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            /* START: Updated to TKAfro Orange Gradient */
+            background: linear-gradient(135deg, #FF8C00, #FFB300);
+            border: none;
+            cursor: pointer;
+            box-shadow: 0 4px 20px rgba(255, 140, 0, 0.5);
+            /* END: Updated to TKAfro Orange Gradient */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: transform 0.3s, box-shadow 0.3s;
+            /* START: Updated to TKAfro Orange Shadow */
+            animation: pulse 2s infinite;
+            /* END: Updated to TKAfro Orange Shadow */
+        }
+
+        .chat-button:hover {
+            transform: scale(1.1);
+            /* START: Updated to TKAfro Orange Shadow */
+            box-shadow: 0 6px 30px rgba(255, 140, 0, 0.7);
+            /* END: Updated to TKAfro Orange Shadow */
+        }
+
+        .chat-button svg { width: 30px; height: 30px; fill: white; }
+
+        .chat-button.active svg { display: none; }
+
+        .chat-button.active::after {
+            content: '✕';
+            color: white;
+            font-size: 24px;
+            font-weight: bold;
+        }
+
+        @keyframes pulse {
+            /* START: Updated to TKAfro Orange Shadow */
+            0%, 100% { box-shadow: 0 4px 20px rgba(255, 140, 0, 0.5); }
+            50% { box-shadow: 0 4px 20px rgba(255, 140, 0, 0.5), 0 0 0 10px rgba(255, 140, 0, 0); }
+            /* END: Updated to TKAfro Orange Shadow */
+        }
+
+        .chat-window {
+            position: fixed;
+            bottom: 100px;
+            right: 20px;
+            width: 380px;
+            height: 550px;
+            min-width: 300px;
+            min-height: 400px;
+            max-width: 90vw;
+            max-height: 85vh;
+            background: #1a1a1a;
+            border-radius: 22px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+            display: none;
+            flex-direction: column;
+            overflow: hidden;
+            animation: slideUp 0.3s ease-out;
+            border: 1px solid #2d2d2d;
+            touch-action: none;
+            user-select: none;
+            /* START: Added for general text readability */
+            color: #e0e0e0;
+            /* END: Added for general text readability */
+        }
+        
+        .chat-window.active { display: flex; }
+        
+        .chat-window.dragging {
+            transition: none !important;
+            cursor: grabbing;
+        }
+
+        @keyframes slideUp {
+            from { transform: translateY(20px); opacity: 0; }
+            to   { transform: translateY(0);   opacity: 1; }
+        }
+
+        .chat-header {
+            /* START: Updated to TKAfro Orange Gradient */
+            background: linear-gradient(135deg, #FF8C00, #FFB300);
+            /* END: Updated to TKAfro Orange Gradient */
+            color: white;
+            padding: 18px 20px 18px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            cursor: grab;
+            position: relative;
+        }
+        
+        .chat-header:active {
+            cursor: grabbing;
+        }
+        
+        .drag-handle {
+            width: 40px;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 2px;
+            position: absolute;
+            top: 8px;
+            left: 50%;
+            transform: translateX(-50%);
+            cursor: grab;
+        }
+        
+        .drag-handle:active {
+            cursor: grabbing;
+        }
+
+        .chat-header-left {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .chat-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            /* START: Updated background for logo */
+            background: #fff; 
+            /* END: Updated background for logo */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+            /* START: Logo Styling - Uses the specified URL */
+            background-image: url('https://tkafrokitchen.com/_next/image?url=%2Fimages%2Fbrand%2Ftklogo.jpg&w=1920&q=75');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            /* END: Logo Styling - Uses the specified URL */
+        }
+
+        .chat-header-text h3 { font-size: 15px; margin-bottom: 3px; }
+        .chat-header-text p  { font-size: 11px; opacity: 0.9; }
+
+        .restart-btn {
+            background: rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: white;
+            padding: 6px 12px;
+            border-radius: 16px;
+            font-size: 11px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .restart-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: scale(1.05);
+        }
+
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 18px 20px;
+            background: #0f0f0f;
+            /* START: Added for general text readability */
+            color: #e0e0e0;
+            /* END: Added for general text readability */
+        }
+
+        .message {
+            margin-bottom: 14px;
+            display: flex;
+            gap: 10px;
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+
+        .message.bot   { flex-direction: row; }
+        .message.user  { flex-direction: row-reverse; }
+
+        .message-avatar {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            /* START: Updated background for logo */
+            background: #fff;
+            /* END: Updated background for logo */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            flex-shrink: 0;
+            /* START: Logo Styling - Uses the specified URL */
+            background-image: url('https://tkafrokitchen.com/_next/image?url=%2Fimages%2Fbrand%2Ftklogo.jpg&w=1920&q=75');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            /* END: Logo Styling - Uses the specified URL */
+        }
+
+        /* START: MODIFIED - The user avatar now keeps its distinct dark background color 
+           but inherits the logo from .message-avatar since background-image: none; was removed.
+        */
+        .message.user .message-avatar { 
+            background: #2d2d2d; 
+        }
+        /* END: MODIFIED */
+
+        .message-content {
+            padding: 10px 14px;
+            border-radius: 18px;
+            max-width: 75%;
+            line-height: 1.4;
+            word-wrap: break-word;
+        }
+
+        .message.user .message-content {
+            /* START: Updated to TKAfro Orange Gradient */
+            background: linear-gradient(135deg, #FF8C00, #FFB300);
+            /* END: Updated to TKAfro Orange Gradient */
+            color: white;
+            border-bottom-right-radius: 4px;
+        }
+
+        .message.bot .message-content {
+            background: #202020;
+            border-bottom-left-radius: 4px;
+            /* START: Explicitly set text color for readability */
+            color: #e0e0e0;
+            /* END: Explicitly set text color for readability */
+        }
+
+        .quick-replies {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin: 4px 0 10px 44px;
+        }
+
+        .quick-reply-btn {
+            background: #202020;
+            /* START: Updated to TKAfro Orange */
+            color: #FF8C00;
+            border: 1px solid #343434;
+            /* END: Updated to TKAfro Orange */
+            padding: 7px 14px;
+            border-radius: 18px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+            white-space: nowrap;
+        }
+
+        .quick-reply-btn:hover {
+            background: #2a2a2a;
+            /* START: Updated to TKAfro Orange */
+            border-color: #FF8C00;
+            /* END: Updated to TKAfro Orange */
+        }
+
+        .typing-wrapper { 
+            padding: 0 20px 10px;
+            background: #0f0f0f;
+        }
+
+        .typing-indicator {
+            display: none;
+            padding: 8px 12px;
+            background: #202020;
+            border-radius: 16px;
+            width: fit-content;
+        }
+
+        .typing-indicator.active { display: block; }
+
+        .typing-indicator span {
+            display: inline-block;
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            /* START: Updated to TKAfro Orange */
+            background: #FF8C00;
+            /* END: Updated to TKAfro Orange */
+            margin: 0 2px;
+            animation: typing 1.4s infinite;
+        }
+
+        .typing-indicator span:nth-child(2) { animation-delay: 0.2s; }
+        .typing-indicator span:nth-child(3) { animation-delay: 0.4s; }
+
+        @keyframes typing {
+            0%, 60%, 100% { transform: translateY(0); }
+            30%           { transform: translateY(-8px); }
+        }
+
+        .chat-input {
+            padding: 12px 16px;
+            background: #101010;
+            border-top: 1px solid #222;
+            display: none;
+            gap: 10px;
+        }
+
+        .chat-input.visible { display: flex; }
+
+        .chat-input input {
+            flex: 1;
+            padding: 10px 14px;
+            border: 1px solid #262626;
+            border-radius: 20px;
+            font-size: 13px;
+            outline: none;
+            background: #060606;
+            color: #e0e0e0;
+        }
+
+        .chat-input input::placeholder { color: #636363; }
+        .chat-input input:focus { 
+            /* START: Updated to TKAfro Orange */
+            border-color: #FF8C00; 
+            /* END: Updated to TKAfro Orange */
+        }
+
+        .chat-input button {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            /* START: Updated to TKAfro Orange Gradient */
+            background: linear-gradient(135deg, #FF8C00, #FFB300);
+            /* END: Updated to TKAfro Orange Gradient */
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: transform 0.2s;
+        }
+
+        .chat-input button:hover { transform: scale(1.05); }
+        .chat-input button svg { width: 18px; height: 18px; fill: white; }
+
+        @media (max-width: 480px) {
+            .chat-window {
+                width: calc(100vw - 40px);
+                height: calc(100vh - 140px);
+                right: 20px;
+                left: 20px;
+                max-width: none;
+            }
+        }
+
+        .chat-messages::-webkit-scrollbar { width: 6px; }
+        .chat-messages::-webkit-scrollbar-track { background: transparent; }
+        .chat-messages::-webkit-scrollbar-thumb { background: #3d3d3d; border-radius: 3px; }
+        .chat-messages::-webkit-scrollbar-thumb:hover { background: #4d4d4d; }
+    </style>
+</head>
+<body>
+    <div class="chat-widget">
+        <button class="chat-button" id="chatButton">
+            <svg viewBox="0 0 24 24">
+                <path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 14H6l-2 2V4h16v12z"/>
+            </svg>
+        </button>
+
+        <div class="chat-window" id="chatWindow">
+            <div class="drag-handle" id="dragHandle"></div>
+            <div class="chat-header" id="chatHeader">
+                <div class="chat-header-left">
+                    <div class="chat-avatar"></div>
+                    <div class="chat-header-text">
+                        <h3>TKAfro Kitchen Support</h3>
+                        <p>We're here to help</p>
+                    </div>
+                </div>
+                <button class="restart-btn" id="restartBtn">
+                    <span>🔄</span> Restart
+                </button>
+            </div>
+
+            <div class="chat-messages" id="chatMessages"></div>
+
+            <div class="typing-wrapper">
+                <div class="typing-indicator" id="typingIndicator">
+                    <span></span><span></span><span></span>
+                </div>
+            </div>
+
+            <div class="chat-input" id="chatInputBar">
+                <input 
+                    type="text" 
+                    id="messageInput" 
+                    placeholder="Type your message..."
+                    autocomplete="off"
+                />
+                <button id="sendButton">
+                    <svg viewBox="0 0 24 24">
+                        <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
+                    </svg>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ===== UPDATED WEBHOOK URL =====
+        const WEBHOOK_URL = 'http://localhost:5678/webhook/57eeb9c7-44b8-46de-a4f7-f7b7027f2c0a/chat';
+
+        const $ = id => document.getElementById(id);
+        const chatButton = $('chatButton');
+        const chatWindow = $('chatWindow');
+        const chatMessages = $('chatMessages');
+        const messageInput = $('messageInput');
+        const sendButton = $('sendButton');
+        const typingIndicator = $('typingIndicator');
+        const chatInputBar = $('chatInputBar');
+        const chatHeader = $('chatHeader');
+        const dragHandle = $('dragHandle');
+        const restartBtn = $('restartBtn');
+
+        // ===== SESSION MANAGEMENT =====
+        let sessionId = localStorage.getItem('chatSessionId') || `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+        localStorage.setItem('chatSessionId', sessionId);
+        let currentMode = 'menu';
+        
+        // Track if email has been provided for human handoff
+        let emailProvided = false;
+        let humanRequestMessage = '';
+        
+        // Dragging state
+        let isDragging = false;
+        let currentX;
+        let currentY;
+        let initialX;
+        let initialY;
+        let xOffset = 0;
+        let yOffset = 0;
+
+        // ===== MENU STRUCTURE =====
+        const menuStructure = {
+            main: {
+                message: "Hi, welcome to TKAfro Kitchen support 👋 How can we help you today?",
+                buttons: [
+                    { text: '📦 Order issues', action: 'order_issues' },
+                    { text: '🚚 Track my delivery', action: 'track_delivery' },
+                    { text: '🍽️ Menu & dishes', action: 'menu' },
+                    { text: '🧾 Billing & payments', action: 'billing' },
+                    { text: '⚙️ General help', action: 'general' },
+                    { text: '👤 Speak to a human', action: 'human' },
+                    { text: '❓ Something else', action: 'something_else' }
+                ]
+            },
+            order_issues: {
+                message: "What's the issue with your order?",
+                buttons: [
+                    { text: 'Order is late', action: 'late_order' },
+                    { text: 'Wrong items', action: 'wrong_items' },
+                    { text: 'Missing items', action: 'missing_items' },
+                    { text: 'Cancel my order', action: 'cancel_order' },
+                    { text: '🏠 Back to main menu', action: 'main' }
+                ]
+            },
+            menu: {
+                message: "What would you like to know about our menu?",
+                buttons: [
+                    { text: '🍚 Rice dishes', action: 'menu_rice' },
+                    { text: '🍲 Stews & soups', action: 'menu_stews_soups' },
+                    { text: '🍖 Peppered meats & grills', action: 'menu_peppered_meats' },
+                    { text: '🍌 Sides & plantain', action: 'menu_sides' },
+                    { text: '🥟 Snacks & pastries', action: 'menu_snacks' },
+                    { text: '❄️ Frozen meal boxes', action: 'menu_frozen' },
+                    { text: '⭐ Popular dishes', action: 'popular' },
+                    { text: '🥗 Vegetarian options', action: 'vegetarian' },
+                    { text: '🌶️ Spicy options', action: 'spicy' },
+                    { text: '⚠️ Allergen info', action: 'allergen' },
+                    { text: '🏠 Back to main menu', action: 'main' }
+                ]
+            },
+            menu_rice: {
+                message: "Our authentic Nigerian rice dishes:",
+                buttons: [
+                    { text: 'Jollof Rice', action: 'dish_jollof_rice' },
+                    { text: 'Fried Rice', action: 'dish_fried_rice' },
+                    { text: 'Coconut Rice', action: 'dish_coconut_rice' },
+                    { text: 'Ofada Rice & Sauce', action: 'dish_ofada_rice' },
+                    { text: '🔙 Back to menu', action: 'menu' },
+                    { text: '🏠 Main menu', action: 'main' }
+                ]
+            },
+            menu_stews_soups: {
+                message: "Rich stews and authentic soups:",
+                buttons: [
+                    { text: 'Egusi Soup', action: 'dish_egusi' },
+                    { text: 'Efo Riro', action: 'dish_efo_riro' },
+                    { text: 'Okra Soup', action: 'dish_okra' },
+                    { text: 'Ogbono Soup', action: 'dish_ogbono' },
+                    { text: 'Ayamase Sauce', action: 'dish_ayamase' },
+                    { text: 'Assorted Stew', action: 'dish_assorted_stew' },
+                    { text: 'Chicken Stew', action: 'dish_chicken_stew' },
+                    { text: 'Fish Stew', action: 'dish_fish_stew' },
+                    { text: '🔙 Back to menu', action: 'menu' },
+                    { text: '🏠 Main menu', action: 'main' }
+                ]
+            },
+            menu_peppered_meats: {
+                message: "Grilled meats tossed in our signature pepper sauce:",
+                buttons: [
+                    { text: 'Peppered Beef', action: 'dish_peppered_beef' },
+                    { text: 'Peppered Chicken', action: 'dish_peppered_chicken' },
+                    { text: 'Peppered Soft Chicken', action: 'dish_peppered_soft_chicken' },
+                    { text: 'Peppered Turkey', action: 'dish_peppered_turkey' },
+                    { text: 'Peppered Goat', action: 'dish_peppered_goat' },
+                    { text: 'Peppered Fish', action: 'dish_peppered_fish' },
+                    { text: '🔙 Back to menu', action: 'menu' },
+                    { text: '🏠 Main menu', action: 'main' }
+                ]
+            },
+            menu_sides: {
+                message: "Perfect sides and accompaniments:",
+                buttons: [
+                    { text: 'Fried Plantain (Dodo)', action: 'dish_plantain' },
+                    { text: 'Dodo & Gizzards', action: 'dish_dodo_gizzards' },
+                    { text: 'Ewa Agoyin', action: 'dish_ewa_agoyin' },
+                    { text: 'Yam Porridge', action: 'dish_yam_porridge' },
+                    { text: 'Beans Porridge', action: 'dish_beans_porridge' },
+                    { text: 'Coleslaw', action: 'dish_coleslaw' },
+                    { text: '🔙 Back to menu', action: 'menu' },
+                    { text: '🏠 Main menu', action: 'main' }
+                ]
+            },
+            menu_snacks: {
+                message: "Delicious Nigerian snacks and pastries:",
+                buttons: [
+                    { text: 'Meat Pies', action: 'dish_meat_pies' },
+                    { text: 'Sausage Rolls', action: 'dish_sausage_rolls' },
+                    { text: 'Chicken Pies', action: 'dish_chicken_pies' },
+                    { text: 'Fish Pies', action: 'dish_fish_pies' },
+                    { text: 'Puff Puff', action: 'dish_puff_puff' },
+                    { text: 'Snack Boxes', action: 'dish_snack_boxes' },
+                    { text: '🔙 Back to menu', action: 'menu' },
+                    { text: '🏠 Main menu', action: 'main' }
+                ]
+            },
+            menu_frozen: {
+                message: "Frozen meal trays for convenient storage:",
+                buttons: [
+                    { text: 'About frozen meals', action: 'dish_frozen_info' },
+                    { text: '🔙 Back to menu', action: 'menu' },
+                    { text: '🏠 Main menu', action: 'main' }
+                ]
+            },
+            billing: {
+                message: "How can we help with billing or payments?",
+                buttons: [
+                    { text: 'Payment failed', action: 'payment_failed' },
+                    { text: 'Order minimum', action: 'order_minimum' },
+                    { text: 'Charged twice', action: 'charged_twice' },
+                    { text: 'Refund status', action: 'refund_status' },
+                    { text: '🏠 Back to main menu', action: 'main' }
+                ]
+            },
+            general: {
+                message: "What do you need help with?",
+                buttons: [
+                    { text: 'Hours & location', action: 'hours_location' },
+                    { text: 'Delivery information', action: 'delivery_info' },
+                    { text: 'Custom requests', action: 'special_requests' },
+                    { text: '🏠 Back to main menu', action: 'main' }
+                ]
+            }
+        };
+
+        // ===== STATIC RESPONSES =====
+        const responses = {
+            // Order issues
+            late_order: "Sorry your order is running late. We cook and ship on specific days and use a courier for UK-mainland delivery, so delays can sometimes happen in transit. Please share your order number and we'll check the latest tracking with the courier for you.",
+            wrong_items: "Sorry about the mistake with your order. Please share your order number and a photo of the issue so we can fix it right away.",
+            missing_items: "Sorry items are missing from your order. Please provide your order number so we can resolve this immediately.",
+            cancel_order: "To cancel your order, please provide your order number. Note that orders can only be cancelled if not yet dispatched.",
+            
+            // Menu highlights
+            popular: "Customer favourites include our Jollof Rice, Fried Rice, Peppered Beef and Chicken, Peppered Soft Chicken, Egusi Soup, Efo Riro and fried plantain. If you tell us what you're in the mood for (rice, stews or snacks), we can recommend a full combo.",
+            vegetarian: "For vegetarian options, popular picks are Jollof Rice, Fried Rice, Coconut Rice, Plantain, Efo Riro (spinach stew without meat), beans dishes like Ewa Agoyin, and yam or beans porridges. Let us know if you also avoid dairy or eggs so we can narrow it down further.",
+            spicy: "If you like spice, try our peppered meats (beef, goat, chicken, turkey and fish), Ayamase or Ofada sauces, and our assorted stews. Most dishes have adjustable spice levels, so you can ask for mild, medium or extra hot.",
+            allergen: "All our food is prepared in the same kitchen, so cross-contamination is possible and we can't guarantee any dish is completely free from specific allergens. For detailed guidance, email chef@tkafrokitchen.com with your allergens and the dishes you're considering and the chef will advise what's safest.",
+            
+            // General info
+            hours_location: "We're based in Milton Keynes, UK with delivery and collection available Wednesday–Saturday, 9:00 AM–7:00 PM. For anything specific, email chef@tkafrokitchen.com and the team usually replies within about 2 hours during opening hours.",
+            delivery_info: "We deliver authentic Nigerian food across UK mainland with a £70 minimum order. Meals are shipped chilled or frozen in insulated packaging so they arrive safely; once delivered, pop everything straight into the fridge or freezer and follow the reheating instructions in your order.",
+            special_requests: "We're happy to accommodate special requests! Please include details when placing your order, or contact chef@tkafrokitchen.com for catering and custom orders.",
+            
+            // Billing
+            payment_failed: "If your payment fails, please try again or use a different card or method. Remember there's a £70 minimum order for delivery; if you still have problems, share your order number and we'll check whether the payment was captured or blocked by your bank.",
+            order_minimum: "There's currently a £70 minimum order for UK-mainland delivery. If you're slightly under, we can suggest add-ons (snacks, stews or sides) to help you reach the minimum.",
+            charged_twice: "Sorry about that! Please provide your order number and we'll investigate the duplicate charge and process a refund immediately.",
+            refund_status: "To check your refund status, please provide your order number. Refunds typically process within 5-7 business days.",
+            
+            // Human handoff
+            human: "A human team member will reply as soon as possible during opening hours (Wed–Sat, 9 AM–7 PM). We usually respond to emails within about 2 hours, so please describe your issue and add your email or phone number so we can get back to you.",
+
+            // RICE DISHES
+            dish_jollof_rice: "Jollof Rice – classic Nigerian party rice cooked in a rich tomato and pepper base with aromatic spices. Served in generous tray portions. Prices typically start around £15-25 depending on tray size. Would you like recommendations for what to pair this with?",
+            dish_fried_rice: "Fried Rice – colourful and flavourful rice stir-fried with mixed vegetables, curry and traditional seasonings. Perfect as a main or side. Trays from around £15-25. Would you like to know tray sizes for small parties vs large events?",
+            dish_coconut_rice: "Coconut Rice – aromatic rice cooked in creamy coconut milk with a hint of sweetness. Pairs beautifully with spicy stews and grilled meats. Available in various tray sizes. We can suggest the perfect combo dishes!",
+            dish_ofada_rice: "Ofada Rice & Ayamase Sauce – unpolished local rice served with the famous spicy green pepper sauce (Ayamase). A traditional favourite with bold, peppery flavours. Tray pricing varies by size; we can help you choose based on guest count.",
+
+            // STEWS & SOUPS
+            dish_egusi: "Egusi Soup – rich soup made with ground melon seeds, leafy greens, and your choice of meat or fish. Traditionally served with pounded yam, fufu, or rice. One of our most popular dishes! Would you like pairing suggestions?",
+            dish_efo_riro: "Efo Riro – vibrant spinach stew cooked with peppers, onions, and assorted meats or fish in rich palm oil. Can be made vegetarian. Perfect with rice or swallow. Shall we suggest portion sizes?",
+            dish_okra: "Okra Soup – traditional soup with fresh okra, peppers and your choice of protein. Naturally thick and nutritious. Usually served with fufu, eba or pounded yam. We can advise on tray sizes!",
+            dish_ogbono: "Ogbono Soup – beloved draw soup made from ground African mango seeds with a distinctive texture. Served with assorted meats and best enjoyed with swallow. Available in various portions.",
+            dish_ayamase: "Ayamase (Ofada Sauce) – the famous spicy green pepper sauce with locust beans, delivering bold authentic flavours. Perfect with Ofada rice or as a condiment. We can recommend combinations!",
+            dish_assorted_stew: "Assorted Stew – hearty tomato-based stew with a mix of beef, tripe, and other meats. Versatile dish that goes with rice, yam, or plantain. Tray sizes available for all occasions.",
+            dish_chicken_stew: "Chicken Stew – tender chicken pieces in rich tomato and pepper sauce. A family favourite that pairs with any rice dish. Would you like to know serving sizes?",
+            dish_fish_stew: "Fish Stew – fresh fish in aromatic tomato sauce with peppers and onions. Light yet flavourful, perfect with rice or plantain. We can help with quantity planning!",
+
+            // PEPPERED MEATS
+            dish_peppered_beef: "Peppered Beef – tender beef marinated, grilled and tossed in our signature hot pepper sauce. A crowd favourite at parties. Tray pricing from around £25-45. Perfect for events – we can advise on quantities!",
+            dish_peppered_chicken: "Peppered Chicken – succulent chicken pieces marinated and finished in spicy pepper sauce. Available in various tray sizes for any occasion. Would you like pairing suggestions?",
+            dish_peppered_soft_chicken: "Peppered Soft Chicken – extra tender chicken cooked until it falls apart, then tossed in rich pepper sauce. One of our signature dishes! Shall we recommend sides to go with it?",
+            dish_peppered_turkey: "Peppered Turkey – premium turkey pieces grilled and coated in aromatic pepper sauce. Excellent for special occasions. We can help you choose the right tray size for your guest count.",
+            dish_peppered_goat: "Peppered Goat – tender goat meat marinated in spices, grilled and finished with hot pepper sauce. A traditional delicacy with authentic flavour. Available in party trays.",
+            dish_peppered_fish: "Peppered Fish – fresh fish fried crispy then smothered in spicy pepper sauce. Choose from various fish types. Perfect protein option – we can suggest sides!",
+
+            // SIDES
+            dish_plantain: "Fried Plantain (Dodo) – sweet ripe plantain sliced and fried to golden perfection. The perfect side for any Nigerian meal or enjoyed on its own. Available in various portions.",
+            dish_dodo_gizzards: "Dodo & Gizzards – sweet fried plantain paired with peppered gizzards. A beloved Nigerian combination that's perfect as a snack or side. Great for parties!",
+            dish_ewa_agoyin: "Ewa Agoyin – mashed beans served with special spicy palm oil sauce. A Lagos street food classic that's vegetarian-friendly. Pairs well with bread, plantain or rice.",
+            dish_yam_porridge: "Yam Porridge (Asaro) – hearty one-pot dish with yam cooked in a rich tomato and pepper base with vegetables. Comforting and filling. We can suggest portion sizes!",
+            dish_beans_porridge: "Beans Porridge – nutritious beans cooked with peppers, palm oil and spices. Vegetarian option that's healthy and satisfying. Available in various portions.",
+            dish_coleslaw: "Coleslaw – fresh, crunchy side salad with cabbage and carrots in creamy dressing. The perfect cooling accompaniment to spicy dishes.",
+
+            // SNACKS
+            dish_meat_pies: "Meat Pies – flaky pastry filled with seasoned minced beef and vegetables. Perfect for events, parties or as a quick snack. Available in boxes of 6, 12 or more.",
+            dish_sausage_rolls: "Sausage Rolls – savoury pastry wrapped around spiced sausage filling. Great for parties, lunchboxes or afternoon tea. Order in multiples of 6.",
+            dish_chicken_pies: "Chicken Pies – golden pastry pockets filled with tender chicken in creamy sauce. Popular party snack available in bulk quantities.",
+            dish_fish_pies: "Fish Pies – flaky pastry filled with seasoned fish mixture. A lighter alternative to meat pies. Perfect for events – we can help you choose snack quantities for your guest count.",
+            dish_puff_puff: "Puff Puff – sweet, fluffy fried dough balls, slightly crispy outside and soft inside. The ultimate Nigerian party snack! Available in bags or platters.",
+            dish_snack_boxes: "Snack Boxes & Platters – assorted selection of our pastries and snacks, perfect for events and gatherings. Mix of meat pies, sausage rolls, chicken pies and more. We can customize based on your preferences and guest numbers!",
+
+            // FROZEN MEALS
+            dish_frozen_info: "Our frozen meal trays arrive chilled or frozen in insulated packaging for safe delivery across UK mainland. Store in your freezer and reheat when ready – perfect for meal prep or keeping authentic Nigerian food on hand. Browse all menu categories to see what's available as frozen trays!"
+        };
+
+        // ===== EVENT LISTENERS =====
+        chatButton.addEventListener('click', () => {
+            chatButton.classList.toggle('active');
+            const isOpening = chatWindow.classList.toggle('active');
+            
+            if (isOpening && chatMessages.children.length === 0) {
+                showMenu('main');
+            }
+        });
+
+        restartBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            restartChat();
+        });
+
+        // Drag functionality
+        chatHeader.addEventListener('mousedown', dragStart);
+        dragHandle.addEventListener('mousedown', dragStart);
+        chatHeader.addEventListener('touchstart', dragStart);
+        dragHandle.addEventListener('touchstart', dragStart);
+        
+        document.addEventListener('mousemove', drag);
+        document.addEventListener('touchmove', drag);
+        
+        document.addEventListener('mouseup', dragEnd);
+        document.addEventListener('touchend', dragEnd);
+
+        function dragStart(e) {
+            if (e.target.closest('.restart-btn') || e.target.closest('input') || e.target.closest('button:not(.restart-btn)')) {
+                return;
+            }
+
+            const clientX = e.type === 'touchstart' ? e.touches[0].clientX : e.clientX;
+            const clientY = e.type === 'touchstart' ? e.touches[0].clientY : e.clientY;
+
+            initialX = clientX - xOffset;
+            initialY = clientY - yOffset;
+
+            isDragging = true;
+            chatWindow.classList.add('dragging');
+        }
+
+        function drag(e) {
+            if (!isDragging) return;
+
+            e.preventDefault();
+
+            const clientX = e.type === 'touchmove' ? e.touches[0].clientX : e.clientX;
+            const clientY = e.type === 'touchmove' ? e.touches[0].clientY : e.clientY;
+
+            currentX = clientX - initialX;
+            currentY = clientY - initialY;
+
+            xOffset = currentX;
+            yOffset = currentY;
+
+            const windowWidth = window.innerWidth;
+            const windowHeight = window.innerHeight;
+            const widgetWidth = chatWindow.offsetWidth;
+            const widgetHeight = chatWindow.offsetHeight;
+
+            const maxX = windowWidth - widgetWidth - 20;
+            const maxY = windowHeight - widgetHeight - 20;
+            const minX = 20;
+            const minY = 20;
+
+            xOffset = Math.max(minX - (windowWidth - widgetWidth - 20), Math.min(maxX - 20, xOffset));
+            yOffset = Math.max(-(windowHeight - widgetHeight - 120), Math.min(minY - 100, yOffset));
+
+            setTranslate(xOffset, yOffset, chatWindow);
+        }
+
+        function dragEnd() {
+            if (isDragging) {
+                initialX = currentX;
+                initialY = currentY;
+                isDragging = false;
+                chatWindow.classList.remove('dragging');
+            }
+        }
+
+        function setTranslate(xPos, yPos, el) {
+            el.style.transform = `translate(${xPos}px, ${yPos}px)`;
+        }
+
+        sendButton.addEventListener('click', () => sendUserMessage());
+        messageInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') sendUserMessage();
+        });
+
+        // ===== CORE FUNCTIONS =====
+        function restartChat() {
+            chatMessages.innerHTML = '';
+            hideInputBar();
+            emailProvided = false;
+            humanRequestMessage = '';
+            sessionId = `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+            localStorage.setItem('chatSessionId', sessionId);
+            showMenu('main');
+        }
+
+        function showMenu(menuKey) {
+            const menu = menuStructure[menuKey];
+            if (!menu) return;
+
+            addBotMessage(menu.message);
+            addQuickReplies(menu.buttons);
+            currentMode = 'menu';
+            hideInputBar();
+        }
+
+        function handleButtonClick(action) {
+            clearQuickReplies();
+
+            if (action === 'main') {
+                showMenu('main');
+                return;
+            }
+
+            if (action === 'something_else') {
+                addBotMessage("What would you like to know? We're here to help!");
+                showInputBar();
+                currentMode = 'something_else';
+                messageInput.placeholder = "Ask about our menu, orders, or anything else...";
+                messageInput.focus();
+                return;
+            }
+
+            if (action === 'track_delivery') {
+                addBotMessage("Please enter your order number so we can check the delivery status with the courier.");
+                showInputBar();
+                currentMode = 'track_delivery';
+                messageInput.placeholder = "Enter your order number...";
+                messageInput.focus();
+                return;
+            }
+
+            if (action === 'human') {
+                addBotMessage(responses.human);
+                showInputBar();
+                currentMode = 'human';
+                emailProvided = false;
+                humanRequestMessage = '';
+                messageInput.placeholder = "Describe your issue...";
+                messageInput.focus();
+                return;
+            }
+
+            if (menuStructure[action]) {
+                showMenu(action);
+                return;
+            }
+
+            // For actions with static responses, show response then send to webhook
+            if (responses[action]) {
+                addBotMessage(responses[action]);
+                
+                // Send to webhook for logging/processing
+                sendToWebhook(action, action);
+                
+                // If these actions need follow-up input, show input bar
+                if (['wrong_items', 'missing_items', 'cancel_order', 'charged_twice', 'refund_status', 'late_order'].includes(action)) {
+                    showInputBar();
+                    currentMode = action;
+                    messageInput.placeholder = "Enter your order number...";
+                    messageInput.focus();
+                } else {
+                    addQuickReplies([{ text: '🏠 Back to main menu', action: 'main' }]);
+                }
+                return;
+            }
+
+            // For unknown actions, send to webhook
+            sendToAI(action);
+        }
+
+        async function sendUserMessage() {
+            const text = messageInput.value.trim();
+            if (!text) return;
+
+            addUserMessage(text);
+            messageInput.value = '';
+
+            // ===== SPECIAL HANDLING FOR HUMAN HANDOFF =====
+            if (currentMode === 'human') {
+                if (!emailProvided) {
+                    // First message is the issue description
+                    humanRequestMessage = text;
+                    emailProvided = false;
+                    addBotMessage("Thanks for that. Please provide your email address or phone number so we can get back to you:");
+                    messageInput.placeholder = "Enter your email or phone...";
+                    messageInput.focus();
+                    currentMode = 'human_email';
+                    return;
+                }
+            }
+
+            if (currentMode === 'human_email') {
+                // Second message is the email/phone
+                const contactInfo = text;
+                showTyping();
+                
+                // Send combined message to webhook
+                const combinedMessage = `Issue: ${humanRequestMessage}\n\nContact: ${contactInfo}`;
+                await sendToWebhook(combinedMessage, 'speak_to_human');
+                
+                hideTyping();
+                addBotMessage("Thank you! A team member will respond to your email within about 2 hours during opening hours (Wed-Sat, 9 AM-7 PM).");
+                emailProvided = false;
+                humanRequestMessage = '';
+                currentMode = 'menu';
+                addQuickReplies([{ text: '🏠 Back to main menu', action: 'main' }]);
+                return;
+            }
+
+            // ===== ALL OTHER USER INPUT SENT TO WEBHOOK WITH ACTION CONTEXT =====
+            if (currentMode === 'track_delivery') {
+                showTyping();
+                await sendToWebhook(text, 'track_order');
+                hideTyping();
+                addQuickReplies([{ text: '🏠 Back to main menu', action: 'main' }]);
+            } else if (currentMode === 'something_else') {
+                showTyping();
+                await sendToWebhook(text, 'sendMessage');
+                hideTyping();
+            } else if (['wrong_items', 'missing_items', 'cancel_order', 'charged_twice', 'refund_status', 'late_order'].includes(currentMode)) {
+                showTyping();
+                await sendToWebhook(text, currentMode);
+                hideTyping();
+                addQuickReplies([{ text: '🏠 Back to main menu', action: 'main' }]);
+            }
+        }
+
+        // ===== WEBHOOK INTEGRATION =====
+        async function sendToWebhook(text, action) {
+            try {
+                const payload = {
+                    sessionId: sessionId,
+                    action: action,
+                    chatInput: text,
+                    timestamp: new Date().toISOString(),
+                    userAgent: navigator.userAgent
+                };
+
+                console.log('📤 Sending to n8n webhook:', payload);
+
+                const res = await fetch(WEBHOOK_URL, {
+                    method: 'POST',
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify(payload)
+                });
+
+                console.log('📥 Response status:', res.status);
+
+                if (!res.ok) {
+                    throw new Error(`HTTP error! status: ${res.status}`);
+                }
+
+                const contentType = res.headers.get('content-type');
+                let data;
+                
+                if (contentType && contentType.includes('application/json')) {
+                    data = await res.json();
+                } else {
+                    const textResponse = await res.text();
+                    console.log('📄 Non-JSON response:', textResponse);
+                    data = { output: textResponse };
+                }
+
+                console.log('✅ Received data:', data);
+                
+                const reply = data.output || data.response || data.reply || data.text || data.message || "Thank you. A team member will get back to you shortly.";
+                
+                if (reply && reply !== text) {
+                    addBotMessage(reply);
+                }
+
+            } catch (err) {
+                console.error('❌ Webhook Error:', err);
+                console.error('Error details:', err.message);
+                
+                // START: Refined Error Message Logic
+                const errorMessage = "Sorry, there is a connection issue. Please try again or contact us directly via email/phone.";
+                
+                // Prevent duplicate error messages immediately following each other
+                const lastMessageElement = chatMessages.lastChild;
+                let isLastMessageError = false;
+                if (lastMessageElement && lastMessageElement.classList.contains('bot')) {
+                    const lastMessageContent = lastMessageElement.querySelector('.message-content');
+                    if (lastMessageContent && lastMessageContent.textContent.trim() === errorMessage.trim()) {
+                        isLastMessageError = true;
+                    }
+                }
+
+                if (!isLastMessageError) {
+                    addBotMessage(errorMessage);
+                } else {
+                    console.log('Error message already displayed. Skipping.');
+                }
+                // END: Refined Error Message Logic
+            }
+        }
+
+        async function sendToAI(action) {
+            showTyping();
+            await sendToWebhook(action, action);
+            hideTyping();
+            addQuickReplies([{ text: '🏠 Back to main menu', action: 'main' }]);
+        }
+
+        // ===== UI FUNCTIONS =====
+        function addBotMessage(text) {
+            const div = document.createElement('div');
+            div.className = 'message bot';
+            div.innerHTML = `
+                <div class="message-avatar"></div>
+                <div class="message-content">${escapeHtml(text)}</div>
+            `;
+            chatMessages.appendChild(div);
+            scrollToBottom();
+        }
+
+        function addUserMessage(text) {
+            const div = document.createElement('div');
+            div.className = 'message user';
+            div.innerHTML = `
+                <div class="message-avatar"></div>
+                <div class="message-content">${escapeHtml(text)}</div>
+            `;
+            chatMessages.appendChild(div);
+            scrollToBottom();
+        }
+
+        function addQuickReplies(buttons) {
+            const container = document.createElement('div');
+            container.className = 'quick-replies';
+            
+            buttons.forEach(btn => {
+                const button = document.createElement('button');
+                button.className = 'quick-reply-btn';
+                button.textContent = btn.text;
+                button.onclick = () => handleButtonClick(btn.action);
+                container.appendChild(button);
+            });
+
+            chatMessages.appendChild(container);
+            scrollToBottom();
+        }
+
+        function clearQuickReplies() {
+            document.querySelectorAll('.quick-replies').forEach(el => el.remove());
+        }
+
+        function showInputBar() {
+            chatInputBar.classList.add('visible');
+        }
+
+        function hideInputBar() {
+            chatInputBar.classList.remove('visible');
+            messageInput.placeholder = "Type your message...";
+        }
+
+        function showTyping() {
+            typingIndicator.classList.add('active');
+            scrollToBottom();
+        }
+
+        function hideTyping() {
+            typingIndicator.classList.remove('active');
+        }
+
+        function scrollToBottom() {
+            setTimeout(() => {
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+            }, 50);
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+    </script>
+</body>
+</html>
